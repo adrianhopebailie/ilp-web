@@ -14,8 +14,8 @@ import {
   createWalletAddressRoutes,
   WalletAddressRoutes
 } from './wallet-address'
-import { createAxiosInstance } from './requests'
-import { AxiosInstance } from 'axios'
+import { createAxiosInstance, RequestInterceptor } from './requests'
+import { AxiosInstance, AxiosInterceptorManager, InternalAxiosRequestConfig } from 'axios'
 import { createGrantRoutes, GrantRoutes } from './grant'
 import {
   createOutgoingPaymentRoutes,
@@ -131,7 +131,7 @@ const createUnauthenticatedDeps = async ({
     logger.level = args.logLevel
   }
 
-  const axiosInstance = createAxiosInstance({
+  const axiosInstance = await createAxiosInstance({
     requestTimeoutMs:
       args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS
   })
@@ -161,27 +161,37 @@ const createAuthenticatedClientDeps = async ({
     logger.level = args.logLevel
   }
 
-  let privateKey: KeyObject | undefined
-  try {
-    privateKey = parseKey(args)
-  } catch (error) {
-    const errorMessage =
-      'Could not load private key when creating Open Payments client'
-    const description = error instanceof Error ? error.message : 'Unknown error'
+  let axiosInstance: AxiosInstance
 
-    logger.error({ description }, errorMessage)
+  if(args.requestInterceptor) {
+      axiosInstance = await createAxiosInstance({
+          requestInterceptor: args.requestInterceptor,
+          requestTimeoutMs: args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS
+      })
+  } else {
+      let privateKey: KeyObject | undefined
+      try {
+          privateKey = parseKey(args)
+      } catch (error) {
+          const errorMessage =
+              'Could not load private key when creating Open Payments client'
+          const description = error instanceof Error ? error.message : 'Unknown error'
 
-    throw new OpenPaymentsClientError(errorMessage, {
-      description
-    })
+          logger.error({ description }, errorMessage)
+
+          throw new OpenPaymentsClientError(errorMessage, {
+              description
+          })
+      }
+      axiosInstance = await createAxiosInstance({
+          privateKey,
+          keyId: args.keyId,
+          requestTimeoutMs:
+              args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS
+      })
   }
 
-  const axiosInstance = createAxiosInstance({
-    privateKey,
-    keyId: args.keyId,
-    requestTimeoutMs:
-      args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS
-  })
+
   const walletAddressServerOpenApi = await createOpenAPI(
     path.resolve(__dirname, '../openapi/wallet-address-server.yaml')
   )
@@ -242,11 +252,12 @@ export const createUnauthenticatedClient = async (
 export interface CreateAuthenticatedClientArgs
   extends CreateUnauthenticatedClientArgs {
   /** The private EdDSA-Ed25519 key (or the relative or absolute path to the key) with which requests will be signed */
-  privateKey: string | KeyLike
+  privateKey?: string | KeyLike
   /** The key identifier referring to the private key */
-  keyId: string
+  keyId?: string
   /** The wallet address which the client will identify itself by */
   walletAddressUrl: string
+  requestInterceptor: RequestInterceptor
 }
 
 export interface AuthenticatedClient

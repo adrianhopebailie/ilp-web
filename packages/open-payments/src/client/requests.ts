@@ -1,12 +1,13 @@
 import axios, {
   AxiosInstance,
+  AxiosInterceptorOptions,
   InternalAxiosRequestConfig,
   isAxiosError
 } from 'axios'
 import { KeyObject } from 'crypto'
 import { ResponseValidator } from '@interledger/openapi'
 import { BaseDeps } from '.'
-import { createHeaders } from '@interledger/http-signature-utils'
+//import { createHeaders } from '@interledger/http-signature-utils'
 import { OpenPaymentsClientError } from './error'
 import { isValidationError } from '@interledger/openapi'
 
@@ -158,11 +159,22 @@ const checkUrlProtocol = (deps: BaseDeps, url: string): string => {
   return requestUrl.href
 }
 
-export const createAxiosInstance = (args: {
+export interface RequestInterceptor {
+    onFulfilled?:
+      | ((
+          value: InternalAxiosRequestConfig
+        ) => InternalAxiosRequestConfig | Promise<InternalAxiosRequestConfig>)
+      | null
+    onRejected?: ((error: any) => any) | null
+    options?: AxiosInterceptorOptions
+}
+
+export const createAxiosInstance = async (args: {
   requestTimeoutMs: number
   privateKey?: KeyObject
   keyId?: string
-}): AxiosInstance => {
+  requestInterceptor?: RequestInterceptor 
+}): Promise<AxiosInstance> => {
   const axiosInstance = axios.create({
     headers: {
       common: {
@@ -173,7 +185,16 @@ export const createAxiosInstance = (args: {
     timeout: args.requestTimeoutMs
   })
 
+  if (args.requestInterceptor) {
+    axiosInstance.interceptors.request.use(
+      args.requestInterceptor.onFulfilled,
+      args.requestInterceptor.onRejected,
+      args.requestInterceptor.options
+    )
+  }
+
   if (args.privateKey !== undefined && args.keyId !== undefined) {
+    const signatureUtils = await import('@interledger/http-signature-utils')
     const privateKey = args.privateKey
     const keyId = args.keyId
     axiosInstance.interceptors.request.use(
@@ -181,7 +202,7 @@ export const createAxiosInstance = (args: {
         if (!config.method || !config.url) {
           throw new Error('Cannot intercept request: url or method missing')
         }
-        const contentAndSigHeaders = await createHeaders({
+        const contentAndSigHeaders = await signatureUtils.createHeaders({
           request: {
             method: config.method.toUpperCase(),
             url: config.url,
