@@ -25,7 +25,7 @@ export interface GrantRoutes {
   ): Promise<PendingGrant | Grant>
   continue(
     postArgs: GrantOrTokenRequestArgs,
-    args: GrantContinuationRequest
+    args?: GrantContinuationRequest
   ): Promise<Grant | GrantContinuation>
   cancel(postArgs: GrantOrTokenRequestArgs): Promise<void>
 }

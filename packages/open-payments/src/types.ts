@@ -96,7 +96,7 @@ export type GrantRequest = {
   interact?: ASOperations['post-request']['requestBody']['content']['application/json']['interact']
 }
 export type GrantContinuationRequest = {
-  interact_ref: ASOperations['post-continue']['requestBody']['content']['application/json']['interact_ref']
+  interact_ref?: ASOperations['post-continue']['requestBody']['content']['application/json']['interact_ref']
 }
 export type PendingGrant = {
   interact: ASComponents['schemas']['interact-response']
