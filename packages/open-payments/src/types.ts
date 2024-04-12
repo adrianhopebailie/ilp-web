@@ -2,16 +2,16 @@ import {
   components as RSComponents,
   paths as RSPaths,
   operations as RSOperations
-} from './openapi/generated/resource-server-types'
+} from './openapi/generated/types/resource-server'
 import {
   components as ASComponents,
   paths as ASPaths,
   operations as ASOperations
-} from './openapi/generated/auth-server-types'
+} from './openapi/generated/types/auth-server'
 import {
   components as WAComponents,
   paths as WAPaths
-} from './openapi/generated/wallet-address-server-types'
+} from './openapi/generated/types/wallet-address-server'
 
 export const getWAPath = <P extends keyof WAPaths>(path: P): string =>
   path as string

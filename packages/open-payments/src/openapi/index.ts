@@ -1,5 +1,7 @@
 import { createOpenAPI } from '@interledger/openapi'
-import path from 'path'
+import resourceServerSpec from '../openapi/generated/schemas/resource-server'
+import walletAddressServerSpec from '../openapi/generated/schemas/wallet-address-server'
+import authServerSpec from '../openapi/generated/schemas/auth-server'
 
 /**
  * Returns the OpenAPI object for the Open Payments Resource Server OpenAPI spec.
@@ -7,7 +9,7 @@ import path from 'path'
  * See more: https://github.com/interledger/open-payments/blob/main/packages/openapi/README.md
  */
 export async function getResourceServerOpenAPI() {
-  return createOpenAPI(path.resolve(__dirname, './specs/resource-server.yaml'))
+  return createOpenAPI(resourceServerSpec)
 }
 
 /**
@@ -16,9 +18,7 @@ export async function getResourceServerOpenAPI() {
  * See more: https://github.com/interledger/open-payments/blob/main/packages/openapi/README.md
  */
 export async function getWalletAddressServerOpenAPI() {
-  return createOpenAPI(
-    path.resolve(__dirname, './specs/wallet-address-server.yaml')
-  )
+  return createOpenAPI(walletAddressServerSpec)
 }
 
 /**
@@ -27,5 +27,5 @@ export async function getWalletAddressServerOpenAPI() {
  * See more: https://github.com/interledger/open-payments/blob/main/packages/openapi/README.md
  */
 export async function getAuthServerOpenAPI() {
-  return createOpenAPI(path.resolve(__dirname, './specs/auth-server.yaml'))
+  return createOpenAPI(authServerSpec)
 }
