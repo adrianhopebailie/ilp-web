@@ -9,15 +9,16 @@ import OpenAPIResponseValidator, {
 } from 'openapi-response-validator'
 import { OpenAPIV3, OpenAPIV3_1 } from 'openapi-types'
 
+export { $RefParser }
 export {
   createValidatorMiddleware,
   OpenAPIValidatorMiddlewareError
 } from './middleware'
-
 export const HttpMethod = {
   ...OpenAPIV3.HttpMethods
 }
 export type HttpMethod = OpenAPIV3.HttpMethods
+export { OpenAPIV3_1 }
 
 const ajv = new Ajv2020()
 addFormats(ajv)
@@ -26,9 +27,13 @@ addFormats(ajv)
 export const isHttpMethod = (o: any): o is HttpMethod =>
   Object.values(HttpMethod).includes(o)
 
-export async function createOpenAPI(spec: string): Promise<OpenAPI> {
+export async function createOpenAPI(
+  spec: string | OpenAPIV3_1.Document
+): Promise<OpenAPI> {
   return new OpenAPIImpl(
-    (await $RefParser.dereference(spec)) as OpenAPIV3_1.Document
+    typeof spec === 'string'
+      ? ((await $RefParser.dereference(spec)) as OpenAPIV3_1.Document)
+      : spec
   )
 }
 
