@@ -40,9 +40,9 @@
   "dependencies": {
     "@interledger/http-signature-utils": "workspace:2.0.2",
     "@interledger/openapi": "workspace:2.0.1",
-    "axios": "^1.6.0",
     "base64url": "^3.0.1",
     "http-message-signatures": "^0.1.2",
+    "ky": "^1.2.3",
     "pino": "^8.11.0",
     "uuid": "^9.0.0"
   }

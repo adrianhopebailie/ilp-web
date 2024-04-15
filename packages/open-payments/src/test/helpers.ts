@@ -1,6 +1,6 @@
 import { generateKeyPairSync } from 'crypto'
 import createLogger from 'pino'
-import { createAxiosInstance } from '../client/requests'
+import { createHttpClient } from '../client/requests'
 import {
   IncomingPayment,
   GrantRequest,
@@ -30,7 +30,7 @@ export const silentLogger = createLogger({
 
 export const keyId = 'default-key-id'
 
-export const defaultAxiosInstance = createAxiosInstance({
+export const defaultHttpClient = createHttpClient({
   requestTimeoutMs: 0,
   keyId,
   privateKey: generateKeyPairSync('ed25519').privateKey
@@ -316,7 +316,7 @@ export const mockQuote = (overrides?: Partial<Quote>): Quote => ({
 })
 
 export const createTestDeps = (overrides?: Partial<BaseDeps>): BaseDeps => ({
-  axiosInstance: defaultAxiosInstance,
+  httpClient: defaultHttpClient,
   logger: silentLogger,
   useHttp: false,
   ...overrides

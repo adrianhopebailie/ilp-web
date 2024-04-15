@@ -14,12 +14,8 @@ import {
   createWalletAddressRoutes,
   WalletAddressRoutes
 } from './wallet-address'
-import {
-  createAxiosInstance,
-  createCustomAxiosInstance,
-  InterceptorFn
-} from './requests'
-import { AxiosInstance } from 'axios'
+import { createHttpClient, HttpClient, InterceptorFn } from './requests'
+
 import { createGrantRoutes, GrantRoutes } from './grant'
 import {
   createOutgoingPaymentRoutes,
@@ -37,7 +33,7 @@ import {
 export * from './error'
 
 export interface BaseDeps {
-  axiosInstance: AxiosInstance
+  httpClient: HttpClient
   logger: Logger
   useHttp: boolean
 }
@@ -52,7 +48,7 @@ interface AuthenticatedClientDeps extends UnauthenticatedClientDeps {
 }
 
 export interface RouteDeps extends BaseDeps {
-  axiosInstance: AxiosInstance
+  httpClient: HttpClient
   openApi: OpenAPI
   logger: Logger
 }
@@ -140,7 +136,7 @@ const createUnauthenticatedDeps = async ({
     logger.level = args.logLevel
   }
 
-  const axiosInstance = createAxiosInstance({
+  const kyInstance = createHttpClient({
     requestTimeoutMs:
       args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS
   })
@@ -149,7 +145,7 @@ const createUnauthenticatedDeps = async ({
   const resourceServerOpenApi = await getResourceServerOpenAPI()
 
   return {
-    axiosInstance,
+    httpClient: kyInstance,
     walletAddressServerOpenApi,
     resourceServerOpenApi,
     logger,
@@ -183,20 +179,20 @@ const createAuthenticatedClientDeps = async ({
     })
   }
 
-  let axiosInstance: AxiosInstance | undefined
+  let httpClient: ReturnType<typeof createHttpClient>
 
   if ('authenticatedRequestInterceptor' in args) {
-    axiosInstance = createCustomAxiosInstance({
+    httpClient = createHttpClient({
       requestTimeoutMs:
         args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS,
       authenticatedRequestInterceptor: args.authenticatedRequestInterceptor
     })
   } else {
-    axiosInstance = createAxiosInstance({
-      privateKey,
-      keyId: args.keyId,
+    httpClient = createHttpClient({
       requestTimeoutMs:
-        args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS
+        args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS,
+      privateKey,
+      keyId: args.keyId
     })
   }
 
@@ -205,7 +201,7 @@ const createAuthenticatedClientDeps = async ({
   const authServerOpenApi = await getAuthServerOpenAPI()
 
   return {
-    axiosInstance,
+    httpClient,
     walletAddressServerOpenApi,
     resourceServerOpenApi,
     authServerOpenApi,
