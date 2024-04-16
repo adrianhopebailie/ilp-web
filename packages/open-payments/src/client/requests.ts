@@ -224,7 +224,7 @@ export const createHttpClient = (args: CreateHttpClientArgs): HttpClient => {
   }
 
   if (requestInterceptor) {
-    kyInstance.extend({
+    return kyInstance.extend({
       hooks: {
         beforeRequest: [requestInterceptor]
       }
@@ -234,9 +234,12 @@ export const createHttpClient = (args: CreateHttpClientArgs): HttpClient => {
   return kyInstance
 }
 
-const requestShouldBeAuthorized = (request: Request) =>
-  request.method?.toLowerCase() === 'post' ||
-  (request.headers && request.headers['Authorization'])
+const requestShouldBeAuthorized = (request: Request) => {
+  return (
+    request.method?.toLowerCase() === 'post' ||
+    request.headers.has('Authorization')
+  )
+}
 
 const signRequest = async (
   request: Request,
@@ -251,18 +254,20 @@ const signRequest = async (
     return request
   }
 
+  const requestBody = await request.clone().json() // Request body can only be read once, so clone the original request
+
   const contentAndSigHeaders = await createHeaders({
     request: {
       method: request.method.toUpperCase(),
       url: request.url,
-      headers: JSON.parse(JSON.stringify(request.headers)),
-      body: request.body ? JSON.stringify(request.body) : undefined
+      headers: Object.fromEntries(request.headers.entries()),
+      body: requestBody ? JSON.stringify(requestBody) : undefined
     },
     privateKey,
     keyId
   })
 
-  if (request.body) {
+  if (requestBody) {
     request.headers.set(
       'Content-Digest',
       contentAndSigHeaders['Content-Digest'] as string

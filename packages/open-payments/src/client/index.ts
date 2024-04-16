@@ -136,7 +136,7 @@ const createUnauthenticatedDeps = async ({
     logger.level = args.logLevel
   }
 
-  const kyInstance = createHttpClient({
+  const httpClient = createHttpClient({
     requestTimeoutMs:
       args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS
   })
@@ -145,7 +145,7 @@ const createUnauthenticatedDeps = async ({
   const resourceServerOpenApi = await getResourceServerOpenAPI()
 
   return {
-    httpClient: kyInstance,
+    httpClient,
     walletAddressServerOpenApi,
     resourceServerOpenApi,
     logger,
