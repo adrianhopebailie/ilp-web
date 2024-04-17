@@ -125,18 +125,14 @@ export const deleteRequest = async <TResponse>(
         : {}
     })
 
-    let responseBody
-
-    try {
-      responseBody = await response.json<TResponse>()
-    } catch {
-      // Typically, DELETEs do not have a body anyway, ignore the error
-    }
+    const responseBody = response.body
+      ? await response.json<TResponse>()
+      : undefined
 
     if (openApiResponseValidator) {
       openApiResponseValidator({
         status: response.status,
-        body: responseBody || undefined
+        body: responseBody
       })
     }
   } catch (error) {
@@ -266,7 +262,9 @@ const signRequest = async (
     return request
   }
 
-  const requestBody = await request.clone().json() // Request body can only be read once, so clone the original request
+  const requestBody = request.body
+    ? await request.clone().json() // Request body can only be read once, so clone the original request
+    : undefined
 
   const contentAndSigHeaders = await createHeaders({
     request: {
