@@ -125,9 +125,12 @@ export const deleteRequest = async <TResponse>(
         : {}
     })
 
-    const responseBody = response.body
-      ? await response.json<TResponse>()
-      : undefined
+    console.log(response.body)
+
+    const responseBody =
+      response.body && response.status !== 204
+        ? await response.json<TResponse>()
+        : undefined
 
     if (openApiResponseValidator) {
       openApiResponseValidator({
