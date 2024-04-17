@@ -319,5 +319,6 @@ export const createTestDeps = (overrides?: Partial<BaseDeps>): BaseDeps => ({
   httpClient: defaultHttpClient,
   logger: silentLogger,
   useHttp: false,
+  validateResponses: true,
   ...overrides
 })
