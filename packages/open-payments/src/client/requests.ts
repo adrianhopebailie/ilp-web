@@ -125,6 +125,14 @@ export const deleteRequest = async <TResponse>(
         : {}
     })
 
+    let responseBody
+
+    try {
+      responseBody = await response.json<TResponse>()
+    } catch {
+      // Typically, DELETEs do not have a body anyway, ignore the error
+    }
+
     if (openApiResponseValidator) {
       openApiResponseValidator({
         status: response.status
