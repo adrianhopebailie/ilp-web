@@ -135,7 +135,8 @@ export const deleteRequest = async <TResponse>(
 
     if (openApiResponseValidator) {
       openApiResponseValidator({
-        status: response.status
+        status: response.status,
+        body: responseBody || undefined
       })
     }
   } catch (error) {
