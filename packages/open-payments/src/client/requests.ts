@@ -125,8 +125,6 @@ export const deleteRequest = async <TResponse>(
         : {}
     })
 
-    console.log(response.body)
-
     const responseBody =
       response.body && response.status !== 204
         ? await response.json<TResponse>()
