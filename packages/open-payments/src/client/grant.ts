@@ -1,4 +1,4 @@
-import { HttpMethod } from '@interledger/openapi'
+import { HttpMethod, ResponseValidator } from '@interledger/openapi'
 import {
   GrantOrTokenRequestArgs,
   RouteDeps,
@@ -33,22 +33,24 @@ export interface GrantRoutes {
 export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
   const { openApi, client, ...baseDeps } = deps
 
-  const requestGrantValidator = openApi.createResponseValidator<
-    PendingGrant | Grant
-  >({
-    path: getASPath('/'),
-    method: HttpMethod.POST
-  })
-  const continueGrantValidator = openApi.createResponseValidator<
-    GrantContinuation | Grant
-  >({
-    path: getASPath('/continue/{id}'),
-    method: HttpMethod.POST
-  })
-  const cancelGrantValidator = openApi.createResponseValidator({
-    path: getASPath('/continue/{id}'),
-    method: HttpMethod.DELETE
-  })
+  let requestGrantValidator: ResponseValidator<PendingGrant | Grant>
+  let continueGrantValidator: ResponseValidator<GrantContinuation | Grant>
+  let cancelGrantValidator: ResponseValidator<void>
+
+  if (deps.validateResponses) {
+    requestGrantValidator = openApi.createResponseValidator({
+      path: getASPath('/'),
+      method: HttpMethod.POST
+    })
+    continueGrantValidator = openApi.createResponseValidator({
+      path: getASPath('/continue/{id}'),
+      method: HttpMethod.POST
+    })
+    cancelGrantValidator = openApi.createResponseValidator({
+      path: getASPath('/continue/{id}'),
+      method: HttpMethod.DELETE
+    })
+  }
 
   return {
     request: (

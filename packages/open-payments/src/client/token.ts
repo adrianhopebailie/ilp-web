@@ -8,6 +8,32 @@ export interface TokenRoutes {
   revoke(args: GrantOrTokenRequestArgs): Promise<void>
 }
 
+export const createTokenRoutes = (deps: RouteDeps): TokenRoutes => {
+  const { openApi, ...baseDeps } = deps
+
+  let rotateTokenValidator: ResponseValidator<AccessToken>
+  let revokeTokenValidator: ResponseValidator<void>
+
+  if (deps.validateResponses) {
+    rotateTokenValidator = openApi.createResponseValidator({
+      path: getASPath('/token/{id}'),
+      method: HttpMethod.POST
+    })
+
+    revokeTokenValidator = openApi.createResponseValidator({
+      path: getASPath('/token/{id}'),
+      method: HttpMethod.DELETE
+    })
+  }
+
+  return {
+    rotate: (args: GrantOrTokenRequestArgs) =>
+      rotateToken(baseDeps, args, rotateTokenValidator),
+    revoke: (args: GrantOrTokenRequestArgs) =>
+      revokeToken(baseDeps, args, revokeTokenValidator)
+  }
+}
+
 export const rotateToken = async (
   deps: BaseDeps,
   args: GrantOrTokenRequestArgs,
@@ -40,24 +66,4 @@ export const revokeToken = async (
     },
     validateOpenApiResponse
   )
-}
-
-export const createTokenRoutes = (deps: RouteDeps): TokenRoutes => {
-  const { openApi, ...baseDeps } = deps
-  const rotateTokenValidator = openApi.createResponseValidator<AccessToken>({
-    path: getASPath('/token/{id}'),
-    method: HttpMethod.POST
-  })
-
-  const revokeTokenValidator = openApi.createResponseValidator<void>({
-    path: getASPath('/token/{id}'),
-    method: HttpMethod.DELETE
-  })
-
-  return {
-    rotate: (args: GrantOrTokenRequestArgs) =>
-      rotateToken(baseDeps, args, rotateTokenValidator),
-    revoke: (args: GrantOrTokenRequestArgs) =>
-      revokeToken(baseDeps, args, revokeTokenValidator)
-  }
 }

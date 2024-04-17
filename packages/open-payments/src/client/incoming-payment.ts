@@ -41,47 +41,48 @@ export const createIncomingPaymentRoutes = (
 ): IncomingPaymentRoutes => {
   const { openApi, ...baseDeps } = deps
 
-  const getIncomingPaymentOpenApiValidator =
-    openApi.createResponseValidator<IncomingPaymentWithPaymentMethods>({
+  let getIncomingPaymentOpenApiValidator: ResponseValidator<IncomingPaymentWithPaymentMethods>
+  let getPublicIncomingPaymentOpenApiValidator: ResponseValidator<PublicIncomingPayment>
+  let createIncomingPaymentOpenApiValidator: ResponseValidator<IncomingPaymentWithPaymentMethods>
+  let completeIncomingPaymentOpenApiValidator: ResponseValidator<IncomingPayment>
+  let listIncomingPaymentOpenApiValidator: ResponseValidator<IncomingPaymentPaginationResult>
+
+  if (deps.validateResponses) {
+    getIncomingPaymentOpenApiValidator = openApi.createResponseValidator({
       path: getRSPath('/incoming-payments/{id}'),
       method: HttpMethod.GET
     })
 
-  const getPublicIncomingPaymentOpenApiValidator =
-    openApi.createResponseValidator<PublicIncomingPayment>({
+    getPublicIncomingPaymentOpenApiValidator = openApi.createResponseValidator({
       path: getRSPath('/incoming-payments/{id}'),
       method: HttpMethod.GET
     })
 
-  const createIncomingPaymentOpenApiValidator =
-    openApi.createResponseValidator<IncomingPaymentWithPaymentMethods>({
+    createIncomingPaymentOpenApiValidator = openApi.createResponseValidator({
       path: getRSPath('/incoming-payments'),
       method: HttpMethod.POST
     })
 
-  const completeIncomingPaymentOpenApiValidator =
-    openApi.createResponseValidator<IncomingPayment>({
+    completeIncomingPaymentOpenApiValidator = openApi.createResponseValidator({
       path: getRSPath('/incoming-payments/{id}/complete'),
       method: HttpMethod.POST
     })
 
-  const listIncomingPaymentOpenApiValidator =
-    openApi.createResponseValidator<IncomingPaymentPaginationResult>({
+    listIncomingPaymentOpenApiValidator = openApi.createResponseValidator({
       path: getRSPath('/incoming-payments'),
       method: HttpMethod.GET
     })
+  }
 
   return {
     get: (args: ResourceRequestArgs) =>
       getIncomingPayment(baseDeps, args, getIncomingPaymentOpenApiValidator),
-    getPublic: (args: UnauthenticatedResourceRequestArgs) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      return getPublicIncomingPayment(
+    getPublic: (args: UnauthenticatedResourceRequestArgs) =>
+      getPublicIncomingPayment(
         baseDeps,
         args,
         getPublicIncomingPaymentOpenApiValidator
-      )
-    },
+      ),
     create: (
       requestArgs: ResourceRequestArgs,
       createArgs: CreateIncomingPaymentArgs
@@ -89,8 +90,8 @@ export const createIncomingPaymentRoutes = (
       createIncomingPayment(
         baseDeps,
         requestArgs,
-        createIncomingPaymentOpenApiValidator,
-        createArgs
+        createArgs,
+        createIncomingPaymentOpenApiValidator
       ),
     complete: (args: ResourceRequestArgs) =>
       completeIncomingPayment(
@@ -117,11 +118,14 @@ export const createUnauthenticatedIncomingPaymentRoutes = (
 ): UnauthenticatedIncomingPaymentRoutes => {
   const { openApi, ...baseDeps } = deps
 
-  const getPublicIncomingPaymentOpenApiValidator =
-    openApi.createResponseValidator<PublicIncomingPayment>({
+  let getPublicIncomingPaymentOpenApiValidator: ResponseValidator<PublicIncomingPayment>
+
+  if (deps.validateResponses) {
+    getPublicIncomingPaymentOpenApiValidator = openApi.createResponseValidator({
       path: getRSPath('/incoming-payments/{id}'),
       method: HttpMethod.GET
     })
+  }
 
   return {
     get: (args: UnauthenticatedResourceRequestArgs) =>
@@ -136,7 +140,7 @@ export const createUnauthenticatedIncomingPaymentRoutes = (
 export const getIncomingPayment = async (
   deps: BaseDeps,
   args: ResourceRequestArgs,
-  validateOpenApiResponse: ResponseValidator<IncomingPaymentWithPaymentMethods>
+  validateOpenApiResponse?: ResponseValidator<IncomingPaymentWithPaymentMethods>
 ) => {
   const { url } = args
 
@@ -163,7 +167,7 @@ export const getIncomingPayment = async (
 export const getPublicIncomingPayment = async (
   deps: BaseDeps,
   args: UnauthenticatedResourceRequestArgs,
-  validateOpenApiResponse: ResponseValidator<PublicIncomingPayment>
+  validateOpenApiResponse?: ResponseValidator<PublicIncomingPayment>
 ) => {
   return await get(deps, args, validateOpenApiResponse)
 }
@@ -171,8 +175,8 @@ export const getPublicIncomingPayment = async (
 export const createIncomingPayment = async (
   deps: BaseDeps,
   requestArgs: ResourceRequestArgs,
-  validateOpenApiResponse: ResponseValidator<IncomingPaymentWithPaymentMethods>,
-  createArgs: CreateIncomingPaymentArgs
+  createArgs: CreateIncomingPaymentArgs,
+  validateOpenApiResponse?: ResponseValidator<IncomingPaymentWithPaymentMethods>
 ) => {
   const { url: baseUrl, accessToken } = requestArgs
   const url = `${baseUrl}${getRSPath('/incoming-payments')}`
@@ -198,7 +202,7 @@ export const createIncomingPayment = async (
 export const completeIncomingPayment = async (
   deps: BaseDeps,
   args: ResourceRequestArgs,
-  validateOpenApiResponse: ResponseValidator<IncomingPayment>
+  validateOpenApiResponse?: ResponseValidator<IncomingPayment>
 ) => {
   const { url: incomingPaymentUrl, accessToken } = args
   const url = `${incomingPaymentUrl}/complete`
@@ -224,7 +228,7 @@ export const completeIncomingPayment = async (
 export const listIncomingPayment = async (
   deps: BaseDeps,
   args: CollectionRequestArgs,
-  validateOpenApiResponse: ResponseValidator<IncomingPaymentPaginationResult>,
+  validateOpenApiResponse?: ResponseValidator<IncomingPaymentPaginationResult>,
   pagination?: PaginationArgs
 ) => {
   const { url: baseUrl, accessToken, walletAddress } = args

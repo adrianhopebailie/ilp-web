@@ -36,6 +36,7 @@ export interface BaseDeps {
   httpClient: HttpClient
   logger: Logger
   useHttp: boolean
+  validateResponses: boolean
 }
 
 interface UnauthenticatedClientDeps extends BaseDeps {
@@ -129,6 +130,7 @@ const parseKey = (
 
 const createUnauthenticatedDeps = async ({
   useHttp = false,
+  validateResponses = true,
   ...args
 }: Partial<CreateUnauthenticatedClientArgs> = {}): Promise<UnauthenticatedClientDeps> => {
   const logger = args?.logger ?? createLogger({ name: 'Open Payments Client' })
@@ -149,12 +151,14 @@ const createUnauthenticatedDeps = async ({
     walletAddressServerOpenApi,
     resourceServerOpenApi,
     logger,
-    useHttp
+    useHttp,
+    validateResponses
   }
 }
 
 const createAuthenticatedClientDeps = async ({
   useHttp = false,
+  validateResponses = true,
   ...args
 }:
   | CreateAuthenticatedClientArgs
@@ -206,7 +210,8 @@ const createAuthenticatedClientDeps = async ({
     resourceServerOpenApi,
     authServerOpenApi,
     logger,
-    useHttp
+    useHttp,
+    validateResponses
   }
 }
 
@@ -219,6 +224,8 @@ export interface CreateUnauthenticatedClientArgs {
   logLevel?: LevelWithSilent
   /** If enabled, all requests will use http as protocol. Use in development mode only. */
   useHttp?: boolean
+  /** Enables or disables response validation against the Open Payments OpenAPI specs. Defaults to true. */
+  validateResponses?: boolean
 }
 
 export interface UnauthenticatedClient {

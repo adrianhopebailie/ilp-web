@@ -32,23 +32,26 @@ export const createOutgoingPaymentRoutes = (
 ): OutgoingPaymentRoutes => {
   const { openApi, ...baseDeps } = deps
 
-  const getOutgoingPaymentOpenApiValidator =
-    openApi.createResponseValidator<OutgoingPayment>({
+  let getOutgoingPaymentOpenApiValidator: ResponseValidator<OutgoingPayment>
+  let listOutgoingPaymentOpenApiValidator: ResponseValidator<OutgoingPaymentPaginationResult>
+  let createOutgoingPaymentOpenApiValidator: ResponseValidator<OutgoingPayment>
+
+  if (deps.validateResponses) {
+    getOutgoingPaymentOpenApiValidator = openApi.createResponseValidator({
       path: getRSPath('/outgoing-payments/{id}'),
       method: HttpMethod.GET
     })
 
-  const listOutgoingPaymentOpenApiValidator =
-    openApi.createResponseValidator<OutgoingPaymentPaginationResult>({
+    listOutgoingPaymentOpenApiValidator = openApi.createResponseValidator({
       path: getRSPath('/outgoing-payments'),
       method: HttpMethod.GET
     })
 
-  const createOutgoingPaymentOpenApiValidator =
-    openApi.createResponseValidator<OutgoingPayment>({
+    createOutgoingPaymentOpenApiValidator = openApi.createResponseValidator({
       path: getRSPath('/outgoing-payments'),
       method: HttpMethod.POST
     })
+  }
 
   return {
     get: (requestArgs: ResourceRequestArgs) =>
