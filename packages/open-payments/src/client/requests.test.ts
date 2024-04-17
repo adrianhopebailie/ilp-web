@@ -1,11 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import {
-  createAxiosInstance,
-  createCustomAxiosInstance,
-  deleteRequest,
-  get,
-  post
-} from './requests'
+import { createHttpClient, deleteRequest, get, post } from './requests'
 import { generateKeyPairSync } from 'crypto'
 import nock from 'nock'
 import { createTestDeps, mockOpenApiResponseValidators } from '../test/helpers'
@@ -15,51 +9,60 @@ import assert from 'assert'
 describe('requests', (): void => {
   const privateKey = generateKeyPairSync('ed25519').privateKey
   const keyId = 'myId'
-  const axiosInstance = createAxiosInstance({
-    requestTimeoutMs: 0,
+  const httpClient = createHttpClient({
+    requestTimeoutMs: 1000000,
     privateKey,
     keyId
   })
   const deps = createTestDeps({
-    axiosInstance
+    httpClient
   })
 
-  describe('createAxiosInstance', (): void => {
+  describe('createHttpClient', (): void => {
     test('sets timeout properly', async (): Promise<void> => {
       expect(
-        createAxiosInstance({ requestTimeoutMs: 1000, privateKey, keyId })
-          .defaults.timeout
+        createHttpClient({ requestTimeoutMs: 1000, privateKey, keyId })
       ).toBe(1000)
     })
     test('sets Accept header properly', async (): Promise<void> => {
       expect(
-        createAxiosInstance({ requestTimeoutMs: 0, privateKey, keyId }).defaults
+        createHttpClient({ requestTimeoutMs: 0, privateKey, keyId })['hooks']
           .headers.common['Accept']
       ).toBe('application/json')
     })
     test('sets Content-Type header properly', async (): Promise<void> => {
       expect(
-        createAxiosInstance({ requestTimeoutMs: 0, privateKey, keyId }).defaults
+        createHttpClient({ requestTimeoutMs: 0, privateKey, keyId }).defaults
           .headers.common['Content-Type']
       ).toBe('application/json')
     })
-  })
 
-  describe('createCustomAxiosInstance', (): void => {
-    test('sets authenticated request interceptor', async (): Promise<void> => {
-      const customAxiosInstance = createCustomAxiosInstance({
+    test('sets private key request interceptor', async (): Promise<void> => {
+      const httpClient = createHttpClient({
         requestTimeoutMs: 0,
         authenticatedRequestInterceptor: (config) => config
       })
+      expect(httpClient.interceptors.request['handlers'][0]).toBeDefined()
       expect(
-        customAxiosInstance.interceptors.request['handlers'][0]
+        httpClient.interceptors.request['handlers'][0].fulfilled
       ).toBeDefined()
+      expect(httpClient.interceptors.request['handlers'][0].fulfilled).toEqual(
+        expect.any(Function)
+      )
+    })
+
+    test('sets authenticated request interceptor', async (): Promise<void> => {
+      const httpClient = createHttpClient({
+        requestTimeoutMs: 0,
+        authenticatedRequestInterceptor: (config) => config
+      })
+      expect(httpClient.interceptors.request['handlers'][0]).toBeDefined()
       expect(
-        customAxiosInstance.interceptors.request['handlers'][0].fulfilled
+        httpClient.interceptors.request['handlers'][0].fulfilled
       ).toBeDefined()
-      expect(
-        customAxiosInstance.interceptors.request['handlers'][0].fulfilled
-      ).toEqual(expect.any(Function))
+      expect(httpClient.interceptors.request['handlers'][0].fulfilled).toEqual(
+        expect.any(Function)
+      )
     })
   })
 
@@ -68,7 +71,7 @@ describe('requests', (): void => {
     const responseValidators = mockOpenApiResponseValidators()
 
     beforeAll(() => {
-      jest.spyOn(axiosInstance, 'get')
+      jest.spyOn(httpClient, 'get')
     })
 
     afterEach(() => {
@@ -114,7 +117,7 @@ describe('requests', (): void => {
 
       scope.done()
 
-      expect(axiosInstance.get).toHaveBeenCalledWith(
+      expect(httpClient.get).toHaveBeenCalledWith(
         `${baseUrl}/incoming-payments`,
         {
           headers: {
@@ -140,7 +143,7 @@ describe('requests', (): void => {
       )
       scope.done()
 
-      expect(axiosInstance.get).toHaveBeenCalledWith(
+      expect(httpClient.get).toHaveBeenCalledWith(
         `${baseUrl}/incoming-payments`,
         {
           headers: {}
@@ -178,7 +181,7 @@ describe('requests', (): void => {
         )
         scope.done()
 
-        expect(axiosInstance.get).toHaveBeenCalledWith(
+        expect(httpClient.get).toHaveBeenCalledWith(
           `${baseUrl}/incoming-payments`,
           {
             headers: {},
@@ -261,14 +264,17 @@ describe('requests', (): void => {
 
       await get(deps, { url: httpsUrl }, responseValidators.successfulValidator)
 
-      expect(axiosInstance.get).toHaveBeenCalledWith(httpsUrl, {
+      expect(httpClient.get).toHaveBeenCalledWith(httpsUrl, {
         headers: {}
       })
       scope.done()
     })
 
     test('uses http protocol for request if development environment', async (): Promise<void> => {
-      const tmpDeps = createTestDeps({ axiosInstance, useHttp: true })
+      const tmpDeps = createTestDeps({
+        httpClient: httpClient,
+        useHttp: true
+      })
       const httpsUrl = 'https://localhost:1000/'
       const httpUrl = httpsUrl.replace('https', 'http')
       const scope = nock(httpUrl).get('/').reply(200)
@@ -279,7 +285,7 @@ describe('requests', (): void => {
         responseValidators.successfulValidator
       )
 
-      expect(axiosInstance.get).toHaveBeenCalledWith(httpUrl, {
+      expect(httpClient.get).toHaveBeenCalledWith(httpUrl, {
         headers: {}
       })
       scope.done()
@@ -291,7 +297,7 @@ describe('requests', (): void => {
     const responseValidators = mockOpenApiResponseValidators()
 
     beforeAll(() => {
-      jest.spyOn(axiosInstance, 'post')
+      jest.spyOn(httpClient, 'post')
     })
 
     test('properly POSTs request', async (): Promise<void> => {
@@ -341,11 +347,10 @@ describe('requests', (): void => {
       )
       scope.done()
 
-      expect(axiosInstance.post).toHaveBeenCalledWith(
-        `${baseUrl}/grant`,
-        body,
-        { headers: {} }
-      )
+      expect(httpClient.post).toHaveBeenCalledWith(`${baseUrl}/grant`, {
+        headers: {},
+        json: body
+      })
     })
 
     test('properly POSTs request with accessToken', async (): Promise<void> => {
@@ -398,11 +403,10 @@ describe('requests', (): void => {
       )
       scope.done()
 
-      expect(axiosInstance.post).toHaveBeenCalledWith(
-        `${baseUrl}/grant`,
-        body,
-        { headers: { Authorization: `GNAP ${accessToken}` } }
-      )
+      expect(httpClient.post).toHaveBeenCalledWith(`${baseUrl}/grant`, {
+        headers: { Authorization: `GNAP ${accessToken}` },
+        json: body
+      })
     })
 
     test('calls validator function properly', async (): Promise<void> => {
@@ -439,6 +443,8 @@ describe('requests', (): void => {
       }
       nock(baseUrl).post('/grant', body).reply(400, 'Bad Request')
 
+      expect.assertions(4)
+
       try {
         await post(
           deps,
@@ -463,6 +469,8 @@ describe('requests', (): void => {
         id: 'id'
       }
       nock(baseUrl).post('/grant', body).reply(status, body)
+
+      expect.assertions(4)
 
       try {
         await post(
@@ -492,14 +500,17 @@ describe('requests', (): void => {
         responseValidators.successfulValidator
       )
 
-      expect(axiosInstance.post).toHaveBeenCalledWith(httpsUrl, undefined, {
+      expect(httpClient.post).toHaveBeenCalledWith(httpsUrl, undefined, {
         headers: {}
       })
       scope.done()
     })
 
     test('uses http protocol for request if development environment', async (): Promise<void> => {
-      const tmpDeps = createTestDeps({ axiosInstance, useHttp: true })
+      const tmpDeps = createTestDeps({
+        httpClient,
+        useHttp: true
+      })
       const httpsUrl = 'https://localhost:1000/'
       const httpUrl = httpsUrl.replace('https', 'http')
       const scope = nock(httpUrl).post('/').reply(200)
@@ -510,7 +521,8 @@ describe('requests', (): void => {
         responseValidators.successfulValidator
       )
 
-      expect(axiosInstance.post).toHaveBeenCalledWith(httpUrl, undefined, {
+      expect(httpClient.post).toHaveBeenCalledWith(httpUrl, {
+        json: undefined,
         headers: {}
       })
       scope.done()
@@ -522,7 +534,7 @@ describe('requests', (): void => {
     const responseValidators = mockOpenApiResponseValidators()
 
     beforeAll(() => {
-      jest.spyOn(axiosInstance, 'delete')
+      jest.spyOn(httpClient, 'delete')
     })
 
     test('properly makes DELETE request', async (): Promise<void> => {
@@ -542,7 +554,7 @@ describe('requests', (): void => {
       )
       scope.done()
 
-      expect(axiosInstance.delete).toHaveBeenCalledWith(`${baseUrl}/grant`, {
+      expect(httpClient.delete).toHaveBeenCalledWith(`${baseUrl}/grant`, {
         headers: {}
       })
     })
@@ -574,7 +586,7 @@ describe('requests', (): void => {
       )
       scope.done()
 
-      expect(axiosInstance.delete).toHaveBeenCalledWith(`${baseUrl}/grant/`, {
+      expect(httpClient.delete).toHaveBeenCalledWith(`${baseUrl}/grant/`, {
         headers: {
           Authorization: `GNAP ${accessToken}`
         }
@@ -669,14 +681,17 @@ describe('requests', (): void => {
         responseValidators.successfulValidator
       )
 
-      expect(axiosInstance.delete).toHaveBeenCalledWith(httpsUrl, {
+      expect(httpClient.delete).toHaveBeenCalledWith(httpsUrl, {
         headers: {}
       })
       scope.done()
     })
 
     test('uses http protocol for request if development environment', async (): Promise<void> => {
-      const tmpDeps = createTestDeps({ axiosInstance, useHttp: true })
+      const tmpDeps = createTestDeps({
+        httpClient,
+        useHttp: true
+      })
       const httpsUrl = 'https://localhost:1000/'
       const httpUrl = httpsUrl.replace('https', 'http')
       const scope = nock(httpUrl).delete('/').reply(200)
@@ -687,7 +702,7 @@ describe('requests', (): void => {
         responseValidators.successfulValidator
       )
 
-      expect(axiosInstance.delete).toHaveBeenCalledWith(httpUrl, {
+      expect(httpClient.delete).toHaveBeenCalledWith(httpUrl, {
         headers: {}
       })
       scope.done()
