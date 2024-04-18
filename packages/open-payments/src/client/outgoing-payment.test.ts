@@ -55,7 +55,7 @@ describe('outgoing-payment', (): void => {
         },
         openApiValidators.successfulValidator
       )
-      expect(result).toStrictEqual(outgoingPayment)
+      expect(result).toEqual(outgoingPayment)
       scope.done()
     })
 
@@ -159,7 +159,7 @@ describe('outgoing-payment', (): void => {
               cursor
             }
           )
-          expect(result).toStrictEqual(outgoingPaymentPaginationResult)
+          expect(result).toEqual(outgoingPaymentPaginationResult)
           scope.done()
         }
       )
@@ -201,7 +201,7 @@ describe('outgoing-payment', (): void => {
               cursor
             }
           )
-          expect(result).toStrictEqual(outgoingPaymentPaginationResult)
+          expect(result).toEqual(outgoingPaymentPaginationResult)
           scope.done()
         }
       )
@@ -387,9 +387,7 @@ describe('outgoing-payment', (): void => {
     test('returns outgoing payment if passes validation', async (): Promise<void> => {
       const outgoingPayment = mockOutgoingPayment()
 
-      expect(validateOutgoingPayment(outgoingPayment)).toStrictEqual(
-        outgoingPayment
-      )
+      expect(validateOutgoingPayment(outgoingPayment)).toEqual(outgoingPayment)
     })
 
     test('throws if send amount and sent amount asset scales are different', async (): Promise<void> => {

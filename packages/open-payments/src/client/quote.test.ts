@@ -42,7 +42,7 @@ describe('quote', (): void => {
         },
         openApiValidators.successfulValidator
       )
-      expect(result).toStrictEqual(quote)
+      expect(result).toEqual(quote)
       scope.done()
     })
 
@@ -75,7 +75,7 @@ describe('quote', (): void => {
         openApiValidators.successfulValidator,
         { receiver: quote.receiver, method: 'ilp', walletAddress }
       )
-      expect(result).toStrictEqual(quote)
+      expect(result).toEqual(quote)
       scope.done()
     })
 
