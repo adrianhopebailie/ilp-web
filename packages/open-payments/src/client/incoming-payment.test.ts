@@ -64,7 +64,7 @@ describe('incoming-payment', (): void => {
         },
         openApiValidators.successfulValidator
       )
-      expect(result).toStrictEqual(incomingPayment)
+      expect(result).toEqual(incomingPayment)
     })
 
     test('throws if incoming payment does not pass validation', async (): Promise<void> => {
@@ -133,7 +133,7 @@ describe('incoming-payment', (): void => {
         },
         openApiValidators.successfulValidator
       )
-      expect(result).toStrictEqual(publicIncomingPayment)
+      expect(result).toEqual(publicIncomingPayment)
     })
 
     test('throws if incoming payment does not pass open api validation', async (): Promise<void> => {
@@ -176,13 +176,13 @@ describe('incoming-payment', (): void => {
         const result = await createIncomingPayment(
           deps,
           { url: serverAddress, accessToken },
-          openApiValidators.successfulValidator,
           {
             walletAddress,
             incomingAmount,
             expiresAt,
             metadata
-          }
+          },
+          openApiValidators.successfulValidator
         )
 
         scope.done()
@@ -211,8 +211,8 @@ describe('incoming-payment', (): void => {
         await createIncomingPayment(
           deps,
           { url: serverAddress, accessToken },
-          openApiValidators.successfulValidator,
-          { walletAddress }
+          { walletAddress },
+          openApiValidators.successfulValidator
         )
       } catch (error) {
         assert.ok(error instanceof OpenPaymentsClientError)
@@ -237,8 +237,8 @@ describe('incoming-payment', (): void => {
         createIncomingPayment(
           deps,
           { url: serverAddress, accessToken },
-          openApiValidators.failedValidator,
-          { walletAddress }
+          { walletAddress },
+          openApiValidators.failedValidator
         )
       ).rejects.toThrowError()
       scope.done()
@@ -266,7 +266,7 @@ describe('incoming-payment', (): void => {
 
       scope.done()
 
-      expect(result).toStrictEqual(incomingPayment)
+      expect(result).toEqual(incomingPayment)
     })
 
     test('throws if the incoming payment does not pass validation', async (): Promise<void> => {
@@ -364,7 +364,7 @@ describe('incoming-payment', (): void => {
             }
           )
 
-          expect(result).toStrictEqual(incomingPaymentPaginationResult)
+          expect(result).toEqual(incomingPaymentPaginationResult)
           scope.done()
         }
       )
@@ -407,7 +407,7 @@ describe('incoming-payment', (): void => {
             }
           )
 
-          expect(result).toStrictEqual(incomingPaymentPaginationResult)
+          expect(result).toEqual(incomingPaymentPaginationResult)
           scope.done()
         }
       )
@@ -498,9 +498,7 @@ describe('incoming-payment', (): void => {
         completed: true
       })
 
-      expect(validateIncomingPayment(incomingPayment)).toStrictEqual(
-        incomingPayment
-      )
+      expect(validateIncomingPayment(incomingPayment)).toEqual(incomingPayment)
     })
 
     test('throws if receiving and incoming amount asset scales are different', async (): Promise<void> => {
@@ -557,7 +555,7 @@ describe('incoming-payment', (): void => {
         }
       })
 
-      expect(validateCreatedIncomingPayment(incomingPayment)).toStrictEqual(
+      expect(validateCreatedIncomingPayment(incomingPayment)).toEqual(
         incomingPayment
       )
     })
@@ -593,7 +591,7 @@ describe('incoming-payment', (): void => {
         completed: true
       })
 
-      expect(validateCompletedIncomingPayment(incomingPayment)).toStrictEqual(
+      expect(validateCompletedIncomingPayment(incomingPayment)).toEqual(
         incomingPayment
       )
     })

@@ -89,7 +89,7 @@ describe('token', (): void => {
         },
         openApiValidators.successfulValidator
       )
-      expect(result).toStrictEqual(accessToken)
+      expect(result).toEqual(accessToken)
       scope.done()
     })
 

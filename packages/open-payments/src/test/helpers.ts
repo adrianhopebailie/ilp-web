@@ -31,7 +31,7 @@ export const silentLogger = createLogger({
 export const keyId = 'default-key-id'
 
 export const defaultHttpClient = createHttpClient({
-  requestTimeoutMs: 0,
+  requestTimeoutMs: 1000,
   keyId,
   privateKey: generateKeyPairSync('ed25519').privateKey
 })
