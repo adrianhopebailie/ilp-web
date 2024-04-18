@@ -22,16 +22,6 @@ interface DeleteArgs {
   accessToken?: string
 }
 
-function parseAndRemoveEmptyValuesFromObject(
-  obj: Record<string, string | number | undefined>
-): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(obj)
-      .filter(([_, v]) => v != null)
-      .map(([key, value]) => [key, value?.toString()])
-  ) as Record<string, string>
-}
-
 export const get = async <T>(
   deps: BaseDeps,
   args: GetArgs,
@@ -40,14 +30,10 @@ export const get = async <T>(
   const { httpClient } = deps
   const { accessToken } = args
 
+  const urlWithUpdatedProtocol = checkUrlProtocol(deps, args.url)
+  const url = getUrlWithQueryParams(urlWithUpdatedProtocol, args.queryParams)
+
   try {
-    let url = checkUrlProtocol(deps, args.url)
-
-    if (args.queryParams) {
-      const parsedParams = parseAndRemoveEmptyValuesFromObject(args.queryParams)
-      url += `?${new URLSearchParams(parsedParams)}`
-    }
-
     const response = await httpClient.get(url, {
       headers: accessToken
         ? {
@@ -67,8 +53,27 @@ export const get = async <T>(
 
     return responseBody
   } catch (error) {
-    return handleError(deps, error, 'GET')
+    return handleError(deps, { url, error, requestType: 'GET' })
   }
+}
+
+const getUrlWithQueryParams = (
+  url: string,
+  queryParams?: Record<string, string | number | undefined>
+): string => {
+  if (!queryParams) {
+    return url
+  }
+
+  const urlObject = new URL(url)
+
+  for (const [key, value] of Object.entries(queryParams)) {
+    if (value) {
+      urlObject.searchParams.set(key, value.toString())
+    }
+  }
+
+  return urlObject.href
 }
 
 export const post = async <TRequest, TResponse>(
@@ -102,7 +107,7 @@ export const post = async <TRequest, TResponse>(
 
     return responseBody
   } catch (error) {
-    return handleError(deps, error, 'POST')
+    return handleError(deps, { url, error, requestType: 'POST' })
   }
 }
 
@@ -125,33 +130,41 @@ export const deleteRequest = async <TResponse>(
         : {}
     })
 
-    const responseBody =
-      response.body && response.status !== 204
-        ? await response.json<TResponse>()
-        : undefined
-
     if (openApiResponseValidator) {
       openApiResponseValidator({
         status: response.status,
-        body: responseBody
+        body: undefined
       })
     }
   } catch (error) {
-    return handleError(deps, error, 'DELETE')
+    return handleError(deps, { url, error, requestType: 'DELETE' })
   }
+}
+
+interface HandleErrorArgs {
+  error: unknown
+  url: string
+  requestType: 'POST' | 'DELETE' | 'GET'
 }
 
 const handleError = async (
   deps: BaseDeps,
-  error: unknown,
-  requestType: 'POST' | 'DELETE' | 'GET'
+  args: HandleErrorArgs
 ): Promise<never> => {
+  const { error, url, requestType } = args
+
   let errorDescription
   let errorStatus
   let validationErrors
 
   if (error instanceof HTTPError) {
-    const responseBody = await error.response.json()
+    let responseBody
+
+    try {
+      responseBody = await error.response.json()
+    } catch {
+      // Ignore if we can't parse the response body (or no body exists)
+    }
 
     errorDescription =
       responseBody && responseBody['message']
@@ -167,7 +180,10 @@ const handleError = async (
   }
 
   const errorMessage = `Error making Open Payments ${requestType} request`
-  deps.logger.error({ status: errorStatus, errorDescription }, errorMessage)
+  deps.logger.error(
+    { status: errorStatus, errorDescription, url, requestType },
+    errorMessage
+  )
 
   throw new OpenPaymentsClientError(errorMessage, {
     description: errorDescription,
@@ -243,14 +259,11 @@ export const createHttpClient = (args: CreateHttpClientArgs): HttpClient => {
   return kyInstance
 }
 
-const requestShouldBeAuthorized = (request: Request) => {
-  return (
-    request.method?.toLowerCase() === 'post' ||
-    request.headers.has('Authorization')
-  )
-}
+export const requestShouldBeAuthorized = (request: Request) =>
+  request.method?.toLowerCase() === 'post' ||
+  request.headers.has('Authorization')
 
-const signRequest = async (
+export const signRequest = async (
   request: Request,
   args: {
     privateKey?: KeyObject
@@ -263,9 +276,7 @@ const signRequest = async (
     return request
   }
 
-  const requestBody = request.body
-    ? await request.clone().json() // Request body can only be read once, so clone the original request
-    : undefined
+  const requestBody = request.body ? await request.clone().json() : undefined // Request body can only ever be read once, so we clone the original request
 
   const contentAndSigHeaders = await createHeaders({
     request: {
