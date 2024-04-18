@@ -4,6 +4,8 @@ const baseConfig = require('../../jest.config.base.js')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageName = 'open-payments'
 
+const esModules = ['ky']
+
 module.exports = {
   ...baseConfig,
   clearMocks: true,
@@ -13,5 +15,6 @@ module.exports = {
   modulePaths: [`<rootDir>/packages/${packageName}/src/`],
   id: packageName,
   displayName: packageName,
-  rootDir: '../..'
+  rootDir: '../..',
+  transformIgnorePatterns: [`node_modules/(?!.pnpm|${esModules.join('|')})`]
 }
