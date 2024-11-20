@@ -44,6 +44,27 @@ paths:
                     required:
                       - access_token
                       - continue
+                  - properties:
+                      subject:
+                        type: object
+                        description: Subject (user) information as requested
+                        required:
+                          - sub_ids
+                        properties:
+                          sub_ids:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                format:
+                                  type: string
+                                id:
+                                  type: string
+                              required:
+                                - format
+                                - id
+                    required:
+                      - subject
                 type: object
               examples:
                 Interaction instructions:
@@ -72,6 +93,12 @@ paths:
                       access_token:
                         value: 33OMUKMKSKU80UPRY5NM
                       uri: 'https://auth.rafiki.money/continue/4CF492MLVMSW9MKMXKHQ'
+                Subject Information:
+                  value:
+                    subject:
+                      sub_ids:
+                        - format: uri
+                          id: 'https://example-wallet.com/bob'
         '400':
           description: Bad Request
         '401':
@@ -82,7 +109,6 @@ paths:
         content:
           application/json:
             schema:
-              description: ''
               type: object
               properties:
                 access_token:
@@ -96,8 +122,35 @@ paths:
                   $ref: '#/components/schemas/client'
                 interact:
                   $ref: '#/components/schemas/interact-request'
+                user:
+                  type: object
+                  description: Identifying the user. Needs user interaction.
+                  properties:
+                    sub_ids:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          format:
+                            type: string
+                            enum:
+                              - uri
+                          id:
+                            type: string
+                        required:
+                          - format
+                          - id
+                subject:
+                  type: object
+                  description: Requesting subject (user) information. Needs user interaction.
+                  properties:
+                    sub_id_formats:
+                      type: array
+                      items:
+                        type: string
+                  required:
+                    - sub_id_formats
               required:
-                - access_token
                 - client
             examples:
               Grant request for creating and reading recurring fixed payment:
@@ -134,8 +187,22 @@ paths:
                           - read
                         identifier: 'http://ilp.rafiki.money/bob'
                   client: 'https://webmonize.com/.well-known/pay'
+              Indentifying the user:
+                value:
+                  client: 'https://example-wallet.com/alice'
+                  interact:
+                    start:
+                      - redirect
+                    finish:
+                      method: redirect
+                      uri: 'http://example-website.com/login/1dbe7d4c-9a8b-4351-874b-016b6d62eff9'
+                      nonce: a92c1ba7-7688-4270-be05-43241bf87bcd
+                  user:
+                    sub_ids:
+                      - format: uri
+                        id: 'https://example-wallet.com/bob'
         description: ''
-      description: Make a new grant request
+      description: 'Make a new grant request, subject request, or identify the user'
       security: []
       tags:
         - grant
