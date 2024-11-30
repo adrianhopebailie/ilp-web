@@ -512,25 +512,34 @@ components:
     limits-outgoing:
       title: limits-outgoing
       description: Open Payments specific property that defines the limits under which outgoing payments can be created.
-      type: object
-      properties:
-        receiver:
-          $ref: ./schemas.yaml#/components/schemas/receiver
-        debitAmount:
-          description: 'All amounts are maxima, i.e. multiple payments can be created under a grant as long as the total amounts of these payments do not exceed the maximum amount per interval as specified in the grant.'
-          $ref: ./schemas.yaml#/components/schemas/amount
-        receiveAmount:
-          description: 'All amounts are maxima, i.e. multiple payments can be created under a grant as long as the total amounts of these payments do not exceed the maximum amount per interval as specified in the grant.'
-          $ref: ./schemas.yaml#/components/schemas/amount
-        interval:
-          $ref: '#/components/schemas/interval'
       anyOf:
-        - not:
-            required:
-              - interval
-        - required:
+        - type: object
+          properties:
+            receiver:
+              $ref: ./schemas.yaml#/components/schemas/receiver
+            interval:
+              $ref: '#/components/schemas/interval'
+        - type: object
+          properties:
+            receiver:
+              $ref: ./schemas.yaml#/components/schemas/receiver
+            interval:
+              $ref: '#/components/schemas/interval'
+            debitAmount:
+              description: 'All amounts are maxima, i.e. multiple payments can be created under a grant as long as the total amounts of these payments do not exceed the maximum amount per interval as specified in the grant.'
+              $ref: ./schemas.yaml#/components/schemas/amount
+          required:
             - debitAmount
-        - required:
+        - type: object
+          properties:
+            receiver:
+              $ref: ./schemas.yaml#/components/schemas/receiver
+            interval:
+              $ref: '#/components/schemas/interval'
+            receiveAmount:
+              description: 'All amounts are maxima, i.e. multiple payments can be created under a grant as long as the total amounts of these payments do not exceed the maximum amount per interval as specified in the grant.'
+              $ref: ./schemas.yaml#/components/schemas/amount
+          required:
             - receiveAmount
   securitySchemes:
     GNAP:
