@@ -94,8 +94,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
       jose:
-        specifier: ^4.13.1
-        version: 4.13.1
+        specifier: ^4.15.5
+        version: 4.15.5
       uuid:
         specifier: ^9.0.0
         version: 9.0.0
@@ -7098,8 +7098,8 @@ packages:
       - ts-node
     dev: true
 
-  /jose@4.13.1:
-    resolution: {integrity: sha512-MSJQC5vXco5Br38mzaQKiq9mwt7lwj2eXpgpRyQYNHYt2lq1PjkWa7DLXX0WVcQLE9HhMh3jPiufS7fhJf+CLQ==}
+  /jose@4.15.5:
+    resolution: {integrity: sha512-jc7BFxgKPKi94uOvEmzlSWFFe2+vASyXaKUpdQKatWAESU2MWjDfFf0fdfc83CDKcA5QecabZeNLyfhe3yKNkg==}
     dev: false
 
   /js-sdsl@4.3.0:

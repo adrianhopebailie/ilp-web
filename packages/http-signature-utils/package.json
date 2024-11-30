@@ -26,7 +26,7 @@
   "dependencies": {
     "http-message-signatures": "^1.0.4",
     "httpbis-digest-headers": "^1.0.0",
-    "jose": "^4.13.1",
+    "jose": "^4.15.5",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
