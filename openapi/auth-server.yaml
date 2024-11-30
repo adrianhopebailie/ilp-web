@@ -313,6 +313,7 @@ components:
         - $ref: '#/components/schemas/access-incoming'
         - $ref: '#/components/schemas/access-outgoing'
         - $ref: '#/components/schemas/access-quote'
+        - $ref: '#/components/schemas/access-identity'
       description: The access associated with the access token is described using objects that each contain multiple dimensions of access.
       unevaluatedProperties: false
     access-incoming:
@@ -371,6 +372,27 @@ components:
           description: A string identifier indicating a specific resource at the RS.
         limits:
           $ref: '#/components/schemas/limits-outgoing'
+      required:
+        - type
+        - actions
+        - identifier
+    access-identity:
+      title: access-identity
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - user-identity
+          description: The type of resource request as a string.  This field defines which other fields are allowed in the request object.
+        actions:
+          type: array
+          description: The types of actions the client instance will take at the RS as an array of strings.
+          items:
+            type: string
+            enum:
+              - read
+          uniqueItems: true
       required:
         - type
         - actions
