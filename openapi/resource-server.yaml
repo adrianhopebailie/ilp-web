@@ -1193,6 +1193,10 @@ components:
           description: "The total amount that should be deducted from the sender's account when the corresponding outgoing payment has been paid. "
         method:
           $ref: '#/components/schemas/payment-method'
+        estimatedExchangeRate:
+          type: number
+          description: 'Estimated probed exchange rate over the path (ILP specific).'
+          readOnly: true
         expiresAt:
           type: string
           description: The date and time when the calculated `debitAmount` is no longer valid.

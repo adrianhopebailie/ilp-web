@@ -257,6 +257,8 @@ export interface components {
       /** @description The total amount that should be deducted from the sender's account when the corresponding outgoing payment has been paid. */
       debitAmount: external["schemas.yaml"]["components"]["schemas"]["amount"];
       method: components["schemas"]["payment-method"];
+      /** @description Estimated probed exchange rate over the path (ILP specific). */
+      estimatedExchangeRate?: number;
       /** @description The date and time when the calculated `debitAmount` is no longer valid. */
       expiresAt?: string;
       /**

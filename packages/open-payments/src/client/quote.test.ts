@@ -46,6 +46,24 @@ describe('quote', (): void => {
         openApiValidators.successfulValidator
       )
       expect(result).toEqual(quote)
+      expect(result.estimatedExchangeRate).toBeUndefined()
+      scope.done()
+    })
+
+    test('returns the quote with the estimated exchange rate if it passes open api validation', async (): Promise<void> => {
+      const quote = mockQuote({
+        estimatedExchangeRate: 120
+      })
+      const scope = nock(baseUrl).get(`/quotes/${quote.id}`).reply(200, quote)
+      const result = await getQuote(
+        deps,
+        {
+          url: `${baseUrl}/quotes/${quote.id}`,
+          accessToken
+        },
+        openApiValidators.successfulValidator
+      )
+      expect(result).toEqual(quote)
       scope.done()
     })
 
@@ -79,6 +97,7 @@ describe('quote', (): void => {
         { receiver: quote.receiver, method: 'ilp', walletAddress }
       )
       expect(result).toEqual(quote)
+      expect(result.estimatedExchangeRate).toBeUndefined()
       scope.done()
     })
 
@@ -95,6 +114,25 @@ describe('quote', (): void => {
           { receiver: quote.receiver, method: 'ilp', walletAddress }
         )
       ).rejects.toThrowError()
+      scope.done()
+    })
+
+    test('returns estimated exchange rate if amount can not be sent over the path', async (): Promise<void> => {
+      const quote = mockQuote({
+        receiveAmount: { value: '0', assetCode: 'ZAR', assetScale: 2 },
+        estimatedExchangeRate: 120
+      })
+      const scope = nock(baseUrl).post(`/quotes`).reply(200, quote)
+      const result = await createQuote(
+        deps,
+        {
+          url: baseUrl,
+          accessToken
+        },
+        openApiValidators.successfulValidator,
+        { receiver: quote.receiver, method: 'ilp', walletAddress }
+      )
+      expect(result).toEqual(quote)
       scope.done()
     })
   })
