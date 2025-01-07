@@ -172,6 +172,42 @@ export interface components {
       receiveAmount?: external["schemas.yaml"]["components"]["schemas"]["amount"];
       interval?: components["schemas"]["interval"];
     };
+    "error-invalid-client": {
+      error?: {
+        description?: string;
+        code?: "invalid_client";
+      };
+    };
+    "error-invalid-request": {
+      error?: {
+        description?: string;
+        code?: "invalid_request";
+      };
+    };
+    "error-request-denied": {
+      error?: {
+        description?: string;
+        code?: "request_denied";
+      };
+    };
+    "error-too-fast": {
+      error?: {
+        description?: string;
+        code?: "too_fast";
+      };
+    };
+    "error-invalid-continuation": {
+      error?: {
+        description?: string;
+        code?: "invalid_continuation";
+      };
+    };
+    "error-invalid-rotation": {
+      error?: {
+        description?: string;
+        code?: "invalid_rotation";
+      };
+    };
   };
 }
 
@@ -195,11 +231,25 @@ export interface operations {
         };
       };
       /** Bad Request */
-      400: unknown;
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["error-invalid-request"]
+            | components["schemas"]["error-invalid-client"];
+        };
+      };
       /** Unauthorized */
-      401: unknown;
+      401: {
+        content: {
+          "application/json": components["schemas"]["error-invalid-client"];
+        };
+      };
       /** Internal Server Error */
-      500: unknown;
+      500: {
+        content: {
+          "application/json": components["schemas"]["error-request-denied"];
+        };
+      };
     };
     requestBody: {
       content: {
@@ -231,11 +281,30 @@ export interface operations {
         };
       };
       /** Bad Request */
-      400: unknown;
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["error-too-fast"]
+            | components["schemas"]["error-invalid-client"];
+        };
+      };
       /** Unauthorized */
-      401: unknown;
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["error-invalid-client"]
+            | components["schemas"]["error-invalid-continuation"]
+            | components["schemas"]["error-request-denied"];
+        };
+      };
       /** Not Found */
-      404: unknown;
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["error-invalid-continuation"]
+            | components["schemas"]["error-invalid-request"];
+        };
+      };
     };
     requestBody: {
       content: {
@@ -259,12 +328,21 @@ export interface operations {
     responses: {
       /** No Content */
       204: never;
-      /** Bad Request */
-      400: unknown;
       /** Unauthorized */
-      401: unknown;
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["error-invalid-client"]
+            | components["schemas"]["error-invalid-continuation"]
+            | components["schemas"]["error-invalid-request"];
+        };
+      };
       /** Not Found */
-      404: unknown;
+      404: {
+        content: {
+          "application/json": components["schemas"]["error-invalid-request"];
+        };
+      };
     };
   };
   /** Management endpoint to rotate access token. */
@@ -284,11 +362,29 @@ export interface operations {
         };
       };
       /** Bad Request */
-      400: unknown;
+      400: {
+        content: {
+          "application/json": components["schemas"]["error-invalid-rotation"];
+        };
+      };
       /** Unauthorized */
-      401: unknown;
+      401: {
+        content: {
+          "application/json": components["schemas"]["error-invalid-client"];
+        };
+      };
       /** Not Found */
-      404: unknown;
+      404: {
+        content: {
+          "application/json": components["schemas"]["error-invalid-rotation"];
+        };
+      };
+      /** Internal Server Error */
+      500: {
+        content: {
+          "application/json": components["schemas"]["error-request-denied"];
+        };
+      };
     };
   };
   /** Management endpoint to revoke access token. */
@@ -301,10 +397,18 @@ export interface operations {
     responses: {
       /** No Content */
       204: never;
-      /** Bad Request */
-      400: unknown;
       /** Unauthorized */
-      401: unknown;
+      401: {
+        content: {
+          "application/json": components["schemas"]["error-invalid-client"];
+        };
+      };
+      /** Internal Server Error */
+      500: {
+        content: {
+          "application/json": components["schemas"]["error-request-denied"];
+        };
+      };
     };
   };
 }

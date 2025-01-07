@@ -74,10 +74,24 @@ paths:
                       uri: 'https://auth.interledger-test.dev/continue/4CF492MLVMSW9MKMXKHQ'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error-invalid-request'
+                  - $ref: '#/components/schemas/error-invalid-client'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error-invalid-client'
         '500':
           description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error-request-denied'
       requestBody:
         content:
           application/json:
@@ -198,10 +212,29 @@ paths:
                       wait: 30
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error-too-fast'
+                  - $ref: '#/components/schemas/error-invalid-client'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error-invalid-client'
+                  - $ref: '#/components/schemas/error-invalid-continuation'
+                  - $ref: '#/components/schemas/error-request-denied'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error-invalid-continuation'
+                  - $ref: '#/components/schemas/error-invalid-request'
       requestBody:
         content:
           application/json:
@@ -226,12 +259,21 @@ paths:
       responses:
         '204':
           description: No Content
-        '400':
-          description: Bad Request
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error-invalid-client'
+                  - $ref: '#/components/schemas/error-invalid-continuation'
+                  - $ref: '#/components/schemas/error-invalid-request'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error-invalid-request'
       description: Cancel a grant request or delete a grant client side.
       tags:
         - grant
@@ -279,10 +321,28 @@ paths:
                               assetScale: 2
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error-invalid-rotation'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error-invalid-client'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error-invalid-rotation'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error-request-denied'
       description: Management endpoint to rotate access token.
       tags:
         - token
@@ -293,10 +353,18 @@ paths:
       responses:
         '204':
           description: No Content
-        '400':
-          description: Bad Request
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error-invalid-client'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error-request-denied'
       tags:
         - token
 components:
@@ -532,6 +600,78 @@ components:
             - debitAmount
         - required:
             - receiveAmount
+    error-invalid-client:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            description:
+              type: string
+            code:
+              type: string
+              enum:
+                - invalid_client
+    error-invalid-request:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            description:
+              type: string
+            code:
+              type: string
+              enum:
+                - invalid_request
+    error-request-denied:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            description:
+              type: string
+            code:
+              type: string
+              enum:
+                - request_denied
+    error-too-fast:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            description:
+              type: string
+            code:
+              type: string
+              enum:
+                - too_fast
+    error-invalid-continuation:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            description:
+              type: string
+            code:
+              type: string
+              enum:
+                - invalid_continuation
+    error-invalid-rotation:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            description:
+              type: string
+            code:
+              type: string
+              enum:
+                - invalid_rotation
   securitySchemes:
     GNAP:
       name: Authorization
